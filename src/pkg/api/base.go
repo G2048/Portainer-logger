@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -37,13 +38,28 @@ func NewErrorHttp(status string, body string) *ErrorHttp {
 
 type QueryParams map[string]string
 
+type JsonStringMap map[string]string
 type Response struct {
 	Body   []byte
 	Status int
 }
 
-func (r Response) DecodeBody() string {
-	return string(r.Body)
+func (r Response) DecodeBodyString() (string, error) {
+	return string(r.Body), nil
+}
+func (r Response) DecodeBodySliceMap() (jsonBody []JsonStringMap, err error) {
+	err = json.Unmarshal(r.Body, &jsonBody)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	return jsonBody, err
+}
+func (r Response) DecodeBodyStruct() (jsonBody []struct{}, err error) {
+	err = json.Unmarshal(r.Body, &jsonBody)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	return jsonBody, err
 }
 
 type HttpApi struct {
@@ -108,7 +124,8 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams Query
 		respErr = NewErrorHttp(res.Status, "")
 	}
 	if res.StatusCode >= 400 {
-		respErr = NewErrorHttp(res.Status, clientResponse.DecodeBody())
+		body, _ := clientResponse.DecodeBodyString()
+		respErr = NewErrorHttp(res.Status, body)
 	}
 
 	return clientResponse, respErr
