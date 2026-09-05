@@ -27,9 +27,33 @@ func TestPortainerApi(t *testing.T) {
 		t.Fail()
 	}
 
-	decodedBody, erro := res.DecodeBodySliceMap()
+	// strBody, _ := res.DecodeBodyString()
+	// fmt.Println(strBody)
+
+	var decodedBody []ContainersResponse
+	_, erro := res.DecodeBodyStruct(&decodedBody)
 	if erro != nil {
 		t.Error(erro)
 	}
-	t.Logf("%#v", decodedBody)
+
+	// t.Logf("%#v", decodedBody)
+
+	for _, row := range decodedBody {
+		if row.State == Running {
+			t.Logf("Names: %s, Id: %s, State: %s, NodeName: %s", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+		}
+	}
+
+	// decodedBody, erro := res.DecodeBodySliceMap()
+	// if erro != nil {
+	// 	t.Error(erro)
+	// }
+	// // t.Logf("%#v", decodedBody)
+	// t.Logf("len=%d", len(decodedBody))
+	// // buf := make(map[string]map[string]string)
+	// // for _, row := range decodedBody {
+	// // 	buf[row["Names"]] = row
+	// // 	// t.Logf("%#v", row)
+	// // }
+	// // t.Logf("len=%d", len(buf))
 }
