@@ -70,16 +70,27 @@ func (h *HttpApi) DecodeBody(res *http.Response, clientResp *Response) *Response
 	}
 	return clientResp
 }
+func (h HttpApi) buildQueryParams(uri string, params QueryParams) string {
+	urlVal := url.Values{}
+	uriFull := utils.MustResult(url.Parse(uri))
+	for k, v := range params {
+		urlVal.Add(k, v)
+	}
+	uriFull.RawQuery = urlVal.Encode()
+	return uriFull.String()
+}
 
-func (h *HttpApi) Response(method MethodHttp, endpoint string, payload []byte, queryParams string) (*Response, *ErrorHttp) {
+func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (*Response, *ErrorHttp) {
 	var clientResponse = &Response{"", 0}
 	var respErr *ErrorHttp = nil
-
-	url := utils.MustResult(url.JoinPath(h.URL, endpoint, url.QueryEscape(queryParams)))
-	slog.Info(fmt.Sprintf("Request to url: %s", url))
+	uri := utils.MustResult(url.JoinPath(h.URL, endpoint))
+	if queryParams != nil {
+		uri = h.buildQueryParams(uri, queryParams)
+	}
+	slog.Info(fmt.Sprintf("Request to url: %s", uri))
 
 	h.baseAddHeaders()
-	req := utils.MustResult(http.NewRequest(string(method), url, bytes.NewBuffer(payload)))
+	req := utils.MustResult(http.NewRequest(string(method), uri, bytes.NewBuffer(payload)))
 	req.URL.Query()
 	req.Header = h.header
 
@@ -98,18 +109,18 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, payload []byte, q
 
 	return clientResponse, respErr
 }
-func (h *HttpApi) Get(url string, queryParams string) (*Response, *ErrorHttp) {
-	return h.Response(MethodGet, url, nil, queryParams)
+func (h *HttpApi) Get(url string, queryParams QueryParams) (*Response, *ErrorHttp) {
+	return h.Response(MethodGet, url, queryParams, nil)
 }
 func (h *HttpApi) Post(url string, payload []byte) (*Response, *ErrorHttp) {
-	return h.Response(MethodPost, url, payload, "")
+	return h.Response(MethodPost, url, nil, payload)
 }
 func (h *HttpApi) Patch(url string, payload []byte) (*Response, *ErrorHttp) {
-	return h.Response(MethodPatch, url, payload, "")
+	return h.Response(MethodPatch, url, nil, payload)
 }
 func (h *HttpApi) Put(url string, payload []byte) (*Response, *ErrorHttp) {
-	return h.Response(MethodPut, url, payload, "")
+	return h.Response(MethodPut, url, nil, payload)
 }
 func (h *HttpApi) Delete(url string, payload []byte) (*Response, *ErrorHttp) {
-	return h.Response(MethodDelete, url, payload, "")
+	return h.Response(MethodDelete, url, nil, payload)
 }
