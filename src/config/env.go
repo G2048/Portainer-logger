@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"portainer-logger/src/pkg/utils"
@@ -15,7 +16,11 @@ type ApiPortainerSettings struct {
 
 // Load from .env API_KEY
 func NewApiPortainerSettings() *ApiPortainerSettings {
-	return &ApiPortainerSettings{os.Getenv("API_KEY")}
+	settings := &ApiPortainerSettings{os.Getenv("API_KEY")}
+	if settings.ApiKey == "" {
+		panic(errors.New("Cannot find API_KEY env var!"))
+	}
+	return settings
 }
 
 // Must be called first!
