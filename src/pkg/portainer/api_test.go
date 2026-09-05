@@ -26,5 +26,5 @@ func TestPortainerApi(t *testing.T) {
 	if res.Status != 200 {
 		t.Fail()
 	}
-	t.Logf("%s", res.Body)
+	t.Logf("%s", res.DecodeBody())
 }

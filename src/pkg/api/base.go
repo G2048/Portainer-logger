@@ -35,11 +35,16 @@ func NewErrorHttp(status string, body string) *ErrorHttp {
 	return &ErrorHttp{status, body}
 }
 
+type QueryParams map[string]string
+
 type Response struct {
-	Body   string
+	Body   []byte
 	Status int
 }
-type QueryParams map[string]string
+
+func (r Response) DecodeBody() string {
+	return string(r.Body)
+}
 
 type HttpApi struct {
 	URL string
@@ -59,17 +64,6 @@ func (h *HttpApi) baseAddHeaders() {
 	h.header.Add("Content-Type", "application/json")
 	h.header.Add("accept", "application/json")
 }
-func (h *HttpApi) DecodeBody(res *http.Response, clientResp *Response) *Response {
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-
-	if err != nil {
-		slog.Error(err.Error())
-	} else {
-		clientResp.Body = string(body)
-	}
-	return clientResp
-}
 func (h HttpApi) buildQueryParams(uri string, params QueryParams) string {
 	urlVal := url.Values{}
 	uriFull := utils.MustResult(url.Parse(uri))
@@ -79,9 +73,18 @@ func (h HttpApi) buildQueryParams(uri string, params QueryParams) string {
 	uriFull.RawQuery = urlVal.Encode()
 	return uriFull.String()
 }
+func (h HttpApi) readBody(res *http.Response) []byte {
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	return body
+}
 
 func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (*Response, *ErrorHttp) {
-	var clientResponse = &Response{"", 0}
+	var clientResponse = &Response{nil, 0}
 	var respErr *ErrorHttp = nil
 	uri := utils.MustResult(url.JoinPath(h.URL, endpoint))
 	if queryParams != nil {
@@ -99,12 +102,13 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams Query
 	// flush headers
 	h.header = http.Header{}
 
-	h.DecodeBody(res, clientResponse)
+	clientResponse.Body = h.readBody(res)
+
 	if res.StatusCode >= 500 {
 		respErr = NewErrorHttp(res.Status, "")
 	}
 	if res.StatusCode >= 400 {
-		respErr = NewErrorHttp(res.Status, clientResponse.Body)
+		respErr = NewErrorHttp(res.Status, clientResponse.DecodeBody())
 	}
 
 	return clientResponse, respErr
