@@ -54,8 +54,8 @@ func (r Response) DecodeBodySliceMap() (jsonBody []JsonStringMap, err error) {
 	}
 	return jsonBody, err
 }
-func (r Response) DecodeBodyStruct() (jsonBody []struct{}, err error) {
-	err = json.Unmarshal(r.Body, &jsonBody)
+func (r Response) DecodeBodyStruct(jsonBody any) (any, error) {
+	err := json.Unmarshal(r.Body, &jsonBody)
 	if err != nil {
 		slog.Error(err.Error())
 	}
