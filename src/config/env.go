@@ -23,7 +23,7 @@ func InitLoadDotenv() {
 	dir := utils.MustResult(os.Getwd())
 	// equivalent of ../../..
 	for {
-		goModPath := filepath.Join(dir, "go.mod")
+		goModPath := filepath.Join(dir, ".env")
 		// check of exist go.mod
 		_, err := os.Stat(goModPath)
 		if err == nil {
