@@ -9,6 +9,7 @@ type ContainersLogs struct {
 	ContainerId string
 	Node        string
 	Tail        int
+	Find        string
 }
 type CmdArgs struct {
 	ContainersInfo bool
@@ -23,6 +24,7 @@ func NewCmdArgs() *CmdArgs {
 	var containerIdLogs = flag.String("container", "", "Container id/name for logs")
 	var nodeLogs = flag.String("node", "", "Container node name for logs")
 	var tailLogs = flag.Int("tail", 10, "Print the last n record of logs; default tail=10")
+	var findLogs = find
 
 	flag.Parse()
 	logs := ContainersLogs{
@@ -30,6 +32,7 @@ func NewCmdArgs() *CmdArgs {
 		*containerIdLogs,
 		*nodeLogs,
 		*tailLogs,
+		*findLogs,
 	}
 	return &CmdArgs{
 		ContainersInfo: *containers,

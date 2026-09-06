@@ -31,12 +31,14 @@ func printContainersInfo(decodedBody []portainer.ContainersResponse) {
 		}
 	}
 }
-func findContainerInfo(decodedBody []portainer.ContainersResponse, substring string) {
+func findContainerInfo(decodedBody []portainer.ContainersResponse, substring string) (string, string) {
 	for _, row := range decodedBody {
 		if row.State == portainer.Running && strings.Contains(row.Names[0], substring) {
 			fmt.Printf("Names: %s, Id: %s, State: %s, NodeName: %s\n", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+			return row.Id, row.Portainer.Agent.NodeName
 		}
 	}
+	return "", ""
 }
 func getContainerLogs(client *portainer.PortainerApi, container, node string, tail int) string {
 	res, erro := client.ContainersLogs(container, node, tail)
@@ -48,6 +50,9 @@ func getContainerLogs(client *portainer.PortainerApi, container, node string, ta
 }
 
 func main() {
+	var ContainerId string
+	var Node string
+
 	config.InitLogger(slog.LevelInfo)
 	config.InitLoadDotenv()
 
@@ -58,21 +63,26 @@ func main() {
 	decodedBody := getContainers(client)
 	switch {
 	case cmdArgs.ContainersLogs.Is:
-		if cmdArgs.ContainersLogs.ContainerId == "" {
+		if cmdArgs.ContainersLogs.Find != "" {
+			ContainerId, Node = findContainerInfo(decodedBody(), cmdArgs.ContainersLogs.Find)
+			if ContainerId == "" {
+				panic(fmt.Errorf("ContainerId is empty!"))
+			}
+		} else if cmdArgs.ContainersLogs.ContainerId == "" {
 			fmt.Println(fmt.Errorf("You must specify --container for --log flag!"))
 			os.Exit(-1)
 		} else if cmdArgs.ContainersLogs.Node == "" {
 			fmt.Println(fmt.Errorf("You must specify --node for --log flag!"))
 			os.Exit(-1)
-		} else {
-			body := getContainerLogs(
-				client,
-				cmdArgs.ContainersLogs.ContainerId,
-				cmdArgs.ContainersLogs.Node,
-				cmdArgs.ContainersLogs.Tail,
-			)
-			fmt.Printf("%s\n", body)
 		}
+		body := getContainerLogs(
+			client,
+			ContainerId,
+			Node,
+			cmdArgs.ContainersLogs.Tail,
+		)
+
+		fmt.Printf("%s\n", body)
 	case cmdArgs.Find != "" && cmdArgs.ContainersInfo:
 		findContainerInfo(decodedBody(), cmdArgs.Find)
 	case cmdArgs.ContainersInfo:
