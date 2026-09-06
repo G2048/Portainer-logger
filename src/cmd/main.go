@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"portainer-logger/src/cmd/args"
 	"portainer-logger/src/config"
 	"portainer-logger/src/pkg/portainer"
@@ -40,6 +41,19 @@ func findContainerInfo(decodedBody []portainer.ContainersResponse, substring str
 		}
 	}
 }
+func getContainerLogs(client *portainer.PortainerApi, container, node string, tail int) string {
+	res, rerr := client.ContainersLogs(container, node, tail)
+	if rerr != nil {
+		panic(rerr)
+	}
+
+	decodedBody, err := res.DecodeBodyString()
+	if err != nil {
+		panic(err)
+	}
+
+	return decodedBody
+}
 
 func main() {
 	config.InitLogger(slog.LevelInfo)
@@ -52,7 +66,21 @@ func main() {
 	decodedBody := getContainers(client)
 	switch {
 	case cmdArgs.ContainersLogs.Is:
-		findContainerInfo(decodedBody(), cmdArgs.Find)
+		if cmdArgs.ContainersLogs.ContainerId == "" {
+			fmt.Println(fmt.Errorf("You must specify --container for --log flag!"))
+			os.Exit(-1)
+		} else if cmdArgs.ContainersLogs.Node == "" {
+			fmt.Println(fmt.Errorf("You must specify --node for --log flag!"))
+			os.Exit(-1)
+		} else {
+			body := getContainerLogs(
+				client,
+				cmdArgs.ContainersLogs.ContainerId,
+				cmdArgs.ContainersLogs.Node,
+				cmdArgs.ContainersLogs.Tail,
+			)
+			fmt.Printf("%s\n", body)
+		}
 	case cmdArgs.Find != "" && cmdArgs.ContainersInfo:
 		findContainerInfo(decodedBody(), cmdArgs.Find)
 	case cmdArgs.ContainersInfo:
