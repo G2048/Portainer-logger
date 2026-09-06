@@ -29,9 +29,6 @@ func NewPortainerApi(apiKey string) *PortainerApi {
 	baseEndpoint := "/1/docker/containers/"
 	return &PortainerApi{client, apiKey, baseEndpoint}
 }
-func (p *PortainerApi) baseAddHeaders() {
-	p.AddHeader("X-API-Key:", p.ApiKey)
-}
 func (p PortainerApi) concatUrl(endpoints ...string) string {
 	return utils.MustResult(url.JoinPath(p.baseEndpoint, endpoints...))
 }
@@ -43,6 +40,7 @@ func (p *PortainerApi) Containers(all int) (api.Response, *api.ErrorHttp) {
 }
 
 func (p *PortainerApi) ContainersLogs(container Container, nodeName Node, tail int) (PortainerResponse, *api.ErrorHttp) {
+	// TODO: flush this header
 	p.AddHeader("X-PortainerAgent-Target", nodeName)
 	return adapterResponse(p.Get(p.concatUrl(container, "/logs"), api.QueryParams{"stderr": "1", "stdout": "1", "tail": strconv.Itoa(tail)}))
 }

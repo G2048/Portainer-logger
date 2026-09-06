@@ -36,9 +36,9 @@ func NewHttpApi(url string) *HttpApi {
 func (h *HttpApi) AddHeader(key, value string) {
 	h.header.Add(key, value)
 }
-func (h *HttpApi) baseAddHeaders() {
-	h.header.Add("Content-Type", "application/json")
-	h.header.Add("accept", "application/json")
+func (h HttpApi) baseAddHeaders(header *http.Header) {
+	header.Add("Content-Type", "application/json")
+	header.Add("accept", "application/json")
 }
 func (h HttpApi) buildQueryParams(uri string, params QueryParams) string {
 	urlVal := url.Values{}
@@ -68,16 +68,14 @@ func (h *HttpApi) Request(method MethodHttp, endpoint string, queryParams QueryP
 	}
 	slog.Info(fmt.Sprintf("Request to url: %s", uri))
 
-	h.baseAddHeaders()
 	req := utils.MustResult(http.NewRequest(string(method), uri, bytes.NewBuffer(payload)))
 	req.URL.Query()
-	req.Header = h.header
+	headers := h.header.Clone()
+	h.baseAddHeaders(&headers)
+	req.Header = headers
 
 	res := utils.MustResult(h.Do(req))
 	clientResponse.status = res.StatusCode
-	// flush headers
-	h.header = http.Header{}
-
 	clientResponse.body = h.readBody(res)
 
 	if res.StatusCode >= 500 {
