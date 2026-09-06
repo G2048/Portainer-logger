@@ -7,23 +7,20 @@ import (
 	"portainer-logger/src/cmd/args"
 	"portainer-logger/src/config"
 	"portainer-logger/src/pkg/portainer"
+	"portainer-logger/src/pkg/utils"
 	"strings"
 )
 
 // return another func for lazy getting result from api
 func getContainers(client *portainer.PortainerApi) func() []portainer.ContainersResponse {
 	return func() []portainer.ContainersResponse {
-		res, rerr := client.Containers(1)
-		if rerr != nil {
-			panic(rerr)
+		res, erro := client.Containers(1)
+		if erro != nil {
+			panic(erro)
 		}
 
 		var decodedBody []portainer.ContainersResponse
-		_, err := res.DecodeBodyStruct(&decodedBody)
-		if err != nil {
-			panic(err)
-		}
-
+		utils.MustResult(res.DecodeBodyStruct(&decodedBody))
 		return decodedBody
 	}
 }
@@ -42,16 +39,8 @@ func findContainerInfo(decodedBody []portainer.ContainersResponse, substring str
 	}
 }
 func getContainerLogs(client *portainer.PortainerApi, container, node string, tail int) string {
-	res, rerr := client.ContainersLogs(container, node, tail)
-	if rerr != nil {
-		panic(rerr)
-	}
-
-	decodedBody, err := res.DecodeBodyString()
-	if err != nil {
-		panic(err)
-	}
-
+	res := utils.MustResult(client.ContainersLogs(container, node, tail))
+	decodedBody := utils.MustResult(res.DecodeBodyString())
 	return decodedBody
 }
 
