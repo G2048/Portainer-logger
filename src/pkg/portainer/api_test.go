@@ -18,12 +18,12 @@ func TestPortainerApi(t *testing.T) {
 
 	client := NewPortainerApi(settings.ApiKey)
 	res, err := client.Containers(1)
-	t.Log(res.Status)
+	t.Log(res.Status())
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
-	if res.Status != 200 {
+	if res.Status() != 200 {
 		t.Fail()
 	}
 
