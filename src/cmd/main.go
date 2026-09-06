@@ -9,18 +9,22 @@ import (
 	"strings"
 )
 
-func getContainers(client *portainer.PortainerApi) []portainer.ContainersResponse {
-	res, rerr := client.Containers(1)
-	if rerr != nil {
-		panic(rerr)
-	}
+// return another func for lazy getting result from api
+func getContainers(client *portainer.PortainerApi) func() []portainer.ContainersResponse {
+	return func() []portainer.ContainersResponse {
+		res, rerr := client.Containers(1)
+		if rerr != nil {
+			panic(rerr)
+		}
 
-	var decodedBody []portainer.ContainersResponse
-	_, err := res.DecodeBodyStruct(&decodedBody)
-	if err != nil {
-		panic(err)
+		var decodedBody []portainer.ContainersResponse
+		_, err := res.DecodeBodyStruct(&decodedBody)
+		if err != nil {
+			panic(err)
+		}
+
+		return decodedBody
 	}
-	return decodedBody
 }
 func printContainersInfo(decodedBody []portainer.ContainersResponse) {
 	for _, row := range decodedBody {
@@ -47,9 +51,13 @@ func main() {
 	client := portainer.NewPortainerApi(settings.ApiKey)
 	decodedBody := getContainers(client)
 	switch {
+	case cmdArgs.ContainersLogs.Is:
+		findContainerInfo(decodedBody(), cmdArgs.Find)
+	case cmdArgs.Find != "" && cmdArgs.ContainersInfo:
+		findContainerInfo(decodedBody(), cmdArgs.Find)
 	case cmdArgs.ContainersInfo:
-		printContainersInfo(decodedBody)
+		printContainersInfo(decodedBody())
 	case cmdArgs.Find != "":
-		findContainerInfo(decodedBody, cmdArgs.Find)
+		findContainerInfo(decodedBody(), cmdArgs.Find)
 	}
 }
