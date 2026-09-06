@@ -39,7 +39,10 @@ func findContainerInfo(decodedBody []portainer.ContainersResponse, substring str
 	}
 }
 func getContainerLogs(client *portainer.PortainerApi, container, node string, tail int) string {
-	res := utils.MustResult(client.ContainersLogs(container, node, tail))
+	res, erro := client.ContainersLogs(container, node, tail)
+	if erro != nil {
+		panic(erro)
+	}
 	decodedBody := utils.MustResult(res.DecodeBodyString())
 	return decodedBody
 }

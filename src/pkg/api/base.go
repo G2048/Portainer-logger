@@ -59,7 +59,7 @@ func (h HttpApi) readBody(res *http.Response) []byte {
 	return body
 }
 
-func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (ResponseApi, *ErrorHttp) {
+func (h *HttpApi) Request(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (ResponseApi, *ErrorHttp) {
 	var clientResponse = ResponseApi{nil, 0}
 	var respErr *ErrorHttp = nil
 	uri := utils.MustResult(url.JoinPath(h.URL, endpoint))
@@ -91,17 +91,17 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams Query
 	return clientResponse, respErr
 }
 func (h *HttpApi) Get(url string, queryParams QueryParams) (Response, *ErrorHttp) {
-	return h.Response(MethodGet, url, queryParams, nil)
+	return h.Request(MethodGet, url, queryParams, nil)
 }
 func (h *HttpApi) Post(url string, payload []byte) (Response, *ErrorHttp) {
-	return h.Response(MethodPost, url, nil, payload)
+	return h.Request(MethodPost, url, nil, payload)
 }
 func (h *HttpApi) Patch(url string, payload []byte) (Response, *ErrorHttp) {
-	return h.Response(MethodPatch, url, nil, payload)
+	return h.Request(MethodPatch, url, nil, payload)
 }
 func (h *HttpApi) Put(url string, payload []byte) (Response, *ErrorHttp) {
-	return h.Response(MethodPut, url, nil, payload)
+	return h.Request(MethodPut, url, nil, payload)
 }
 func (h *HttpApi) Delete(url string, payload []byte) (Response, *ErrorHttp) {
-	return h.Response(MethodDelete, url, nil, payload)
+	return h.Request(MethodDelete, url, nil, payload)
 }
