@@ -32,9 +32,12 @@ func printContainersInfo(decodedBody []portainer.ContainersResponse) {
 	}
 }
 func findContainerInfo(decodedBody []portainer.ContainersResponse, substring string) (string, string) {
+	var rowInfo string
 	for _, row := range decodedBody {
 		if row.State == portainer.Running && strings.Contains(row.Names[0], substring) {
-			fmt.Printf("Names: %s, Id: %s, State: %s, NodeName: %s\n", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+			rowInfo = fmt.Sprintf("Names: %s, Id: %s, State: %s, NodeName: %s", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+			fmt.Println(rowInfo)
+			slog.Info(rowInfo)
 			return row.Id, row.Portainer.Agent.NodeName
 		}
 	}
