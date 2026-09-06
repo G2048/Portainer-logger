@@ -2,7 +2,6 @@ package api
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -22,45 +21,6 @@ const MethodOptions MethodHttp = "OPTIONS"
 const MethodHead MethodHttp = "HEAD"
 const MethodTrace MethodHttp = "TRACE"
 const MethodConnect MethodHttp = "CONNECT"
-
-// Response codes is errors: 500 400
-type ErrorHttp struct {
-	status string
-	body   string
-}
-
-func (e ErrorHttp) Error() string {
-	return fmt.Sprintf("StatusCode: %s. ResponseBody: %s", e.status, e.body)
-}
-func NewErrorHttp(status string, body string) *ErrorHttp {
-	return &ErrorHttp{status, body}
-}
-
-type QueryParams map[string]string
-
-type JsonStringMap map[string]string
-type Response struct {
-	Body   []byte
-	Status int
-}
-
-func (r Response) DecodeBodyString() (string, error) {
-	return string(r.Body), nil
-}
-func (r Response) DecodeBodySliceMap() (jsonBody []JsonStringMap, err error) {
-	err = json.Unmarshal(r.Body, &jsonBody)
-	if err != nil {
-		slog.Error(err.Error())
-	}
-	return jsonBody, err
-}
-func (r Response) DecodeBodyStruct(jsonBody any) (any, error) {
-	err := json.Unmarshal(r.Body, &jsonBody)
-	if err != nil {
-		slog.Error(err.Error())
-	}
-	return jsonBody, err
-}
 
 type HttpApi struct {
 	URL string
@@ -99,8 +59,8 @@ func (h HttpApi) readBody(res *http.Response) []byte {
 	return body
 }
 
-func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (*Response, *ErrorHttp) {
-	var clientResponse = &Response{nil, 0}
+func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams QueryParams, payload []byte) (ResponseApi, *ErrorHttp) {
+	var clientResponse = ResponseApi{nil, 0}
 	var respErr *ErrorHttp = nil
 	uri := utils.MustResult(url.JoinPath(h.URL, endpoint))
 	if queryParams != nil {
@@ -114,11 +74,11 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams Query
 	req.Header = h.header
 
 	res := utils.MustResult(h.Do(req))
-	clientResponse.Status = res.StatusCode
+	clientResponse.status = res.StatusCode
 	// flush headers
 	h.header = http.Header{}
 
-	clientResponse.Body = h.readBody(res)
+	clientResponse.body = h.readBody(res)
 
 	if res.StatusCode >= 500 {
 		respErr = NewErrorHttp(res.Status, "")
@@ -130,18 +90,18 @@ func (h *HttpApi) Response(method MethodHttp, endpoint string, queryParams Query
 
 	return clientResponse, respErr
 }
-func (h *HttpApi) Get(url string, queryParams QueryParams) (*Response, *ErrorHttp) {
+func (h *HttpApi) Get(url string, queryParams QueryParams) (Response, *ErrorHttp) {
 	return h.Response(MethodGet, url, queryParams, nil)
 }
-func (h *HttpApi) Post(url string, payload []byte) (*Response, *ErrorHttp) {
+func (h *HttpApi) Post(url string, payload []byte) (Response, *ErrorHttp) {
 	return h.Response(MethodPost, url, nil, payload)
 }
-func (h *HttpApi) Patch(url string, payload []byte) (*Response, *ErrorHttp) {
+func (h *HttpApi) Patch(url string, payload []byte) (Response, *ErrorHttp) {
 	return h.Response(MethodPatch, url, nil, payload)
 }
-func (h *HttpApi) Put(url string, payload []byte) (*Response, *ErrorHttp) {
+func (h *HttpApi) Put(url string, payload []byte) (Response, *ErrorHttp) {
 	return h.Response(MethodPut, url, nil, payload)
 }
-func (h *HttpApi) Delete(url string, payload []byte) (*Response, *ErrorHttp) {
+func (h *HttpApi) Delete(url string, payload []byte) (Response, *ErrorHttp) {
 	return h.Response(MethodDelete, url, nil, payload)
 }
