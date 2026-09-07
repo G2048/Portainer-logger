@@ -59,7 +59,7 @@ func main() {
 	config.InitLogger(slog.LevelInfo)
 	config.InitLoadDotenv()
 
-	settings := config.NewApiPortainerSettings()
+	settings := config.NewPortainerSettings()
 	cmdArgs := args.NewCmdArgs()
 
 	client := portainer.NewPortainerApi(settings.ApiKey)

@@ -10,13 +10,13 @@ import (
 )
 
 // Load from .env API_KEY
-type ApiPortainerSettings struct {
+type PortainerSettings struct {
 	ApiKey string
 }
 
 // Load from .env API_KEY
-func NewApiPortainerSettings() *ApiPortainerSettings {
-	settings := &ApiPortainerSettings{os.Getenv("PORTAINER_API_KEY")}
+func NewPortainerSettings() *PortainerSettings {
+	settings := &PortainerSettings{os.Getenv("PORTAINER_API_KEY")}
 	if settings.ApiKey == "" {
 		panic(errors.New("Cannot find PORTAINER_API_KEY env var!"))
 	}

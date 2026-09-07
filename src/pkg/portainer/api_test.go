@@ -7,7 +7,7 @@ import (
 
 func TestPortainerApi(t *testing.T) {
 	config.InitLoadDotenv()
-	settings := config.NewApiPortainerSettings()
+	settings := config.NewPortainerSettings()
 	t.Logf("%#+v\n", settings)
 	if settings == nil {
 		t.Fail()

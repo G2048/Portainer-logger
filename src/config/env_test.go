@@ -7,7 +7,7 @@ import (
 func TestEnv(t *testing.T) {
 	InitLoadDotenv()
 
-	settings := NewApiPortainerSettings()
+	settings := NewPortainerSettings()
 	if settings == nil {
 		t.Fatal("Settings for ApiPortainerSettings is empty!")
 	}
