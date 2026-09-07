@@ -28,6 +28,10 @@ func InitLoadDotenv() {
 	dir := utils.MustResult(os.Getwd())
 	// equivalent of ../../..
 	for {
+		// if dir is root breaking maybe var is present in bashrc or shell env
+		if dir == "/" {
+			return
+		}
 		goModPath := filepath.Join(dir, ".env")
 		// check of exist go.mod
 		_, err := os.Stat(goModPath)
