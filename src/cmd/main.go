@@ -24,24 +24,32 @@ func getContainers(client *portainer.PortainerApi) func() []portainer.Containers
 		return decodedBody
 	}
 }
-func printContainersInfo(decodedBody []portainer.ContainersResponse) {
+func printContainersInfo(decodedBody []portainer.ContainersResponse, status portainer.State) {
 	for _, row := range decodedBody {
-		if row.State == portainer.Running {
+		if status == "all" || status == row.State {
 			fmt.Printf("Names: %s, Id: %s, State: %s, NodeName: %s\n", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+			continue
 		}
 	}
 }
-func findContainerInfo(decodedBody []portainer.ContainersResponse, substring string) (string, string) {
+func findContainerInfo(decodedBody []portainer.ContainersResponse, substring string, status portainer.State) (string, string) {
 	var rowInfo string
+	var rowId string
+	var nodeName string
+
 	for _, row := range decodedBody {
-		if row.State == portainer.Running && strings.Contains(row.Names[0], substring) {
-			rowInfo = fmt.Sprintf("Names: %s, Id: %s, State: %s, NodeName: %s", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
-			fmt.Println(rowInfo)
-			slog.Info(rowInfo)
-			return row.Id, row.Portainer.Agent.NodeName
+		if status == "all" || row.State == status {
+			for _, name := range row.Names {
+				if strings.Contains(name, substring) {
+					rowInfo = fmt.Sprintf("Names: %s, Id: %s, State: %s, NodeName: %s", name, row.Id, row.State, row.Portainer.Agent.NodeName)
+					fmt.Println(rowInfo)
+				}
+			}
+			rowId = row.Id
+			nodeName = row.Portainer.Agent.NodeName
 		}
 	}
-	return "", ""
+	return rowId, nodeName
 }
 func getContainerLogs(client *portainer.PortainerApi, container, node string, tail int) string {
 	res, erro := client.ContainersLogs(container, node, tail)
@@ -67,7 +75,7 @@ func main() {
 	switch {
 	case cmdArgs.ContainersLogs.Is:
 		if cmdArgs.ContainersLogs.Find != "" {
-			ContainerId, Node = findContainerInfo(decodedBody(), cmdArgs.ContainersLogs.Find)
+			ContainerId, Node = findContainerInfo(decodedBody(), cmdArgs.ContainersLogs.Find, cmdArgs.Status)
 			if ContainerId == "" {
 				panic(fmt.Errorf("ContainerId is empty!"))
 			}
@@ -87,10 +95,10 @@ func main() {
 
 		fmt.Printf("%s\n", body)
 	case cmdArgs.Find != "" && cmdArgs.ContainersInfo:
-		findContainerInfo(decodedBody(), cmdArgs.Find)
+		findContainerInfo(decodedBody(), cmdArgs.Find, cmdArgs.Status)
 	case cmdArgs.ContainersInfo:
-		printContainersInfo(decodedBody())
+		printContainersInfo(decodedBody(), cmdArgs.Status)
 	case cmdArgs.Find != "":
-		findContainerInfo(decodedBody(), cmdArgs.Find)
+		findContainerInfo(decodedBody(), cmdArgs.Find, cmdArgs.Status)
 	}
 }

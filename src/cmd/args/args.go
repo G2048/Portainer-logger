@@ -2,6 +2,7 @@ package args
 
 import (
 	"flag"
+	"portainer-logger/src/pkg/portainer"
 )
 
 type ContainersLogs struct {
@@ -14,12 +15,15 @@ type ContainersLogs struct {
 type CmdArgs struct {
 	ContainersInfo bool
 	Find           string
+	Status         portainer.State
 	ContainersLogs ContainersLogs
 }
 
 func NewCmdArgs() *CmdArgs {
 	var containers = flag.Bool("containers", false, "Get containers from Portainer api")
 	var find = flag.String("find", "", "Find container by mask")
+	var status = flag.String("status", "all", `Get containers by status: "running", "exited", "created" and special "all"`)
+
 	var isLogs = flag.Bool("logs", false, "Download logs from container")
 	var containerIdLogs = flag.String("container", "", "Container id/name for logs")
 	var nodeLogs = flag.String("node", "", "Container node name for logs")
@@ -37,6 +41,7 @@ func NewCmdArgs() *CmdArgs {
 	return &CmdArgs{
 		ContainersInfo: *containers,
 		Find:           *find,
+		Status:         portainer.State(*status),
 		ContainersLogs: logs,
 	}
 }
