@@ -27,7 +27,7 @@ func getContainers(client *portainer.PortainerApi) func() []portainer.Containers
 func printContainersInfo(decodedBody []portainer.ContainersResponse, status portainer.State) {
 	for _, row := range decodedBody {
 		if status == "all" || status == row.State {
-			fmt.Printf("Names: %s, Id: %s, State: %s, NodeName: %s\n", row.Names[0], row.Id, row.State, row.Portainer.Agent.NodeName)
+			fmt.Printf("Names: %s, Id: %s, State: %s, Status: %s, NodeName: %s\n", row.Names[0], row.Id, row.State, row.Status, row.Portainer.Agent.NodeName)
 			continue
 		}
 	}
@@ -41,7 +41,7 @@ func findContainerInfo(decodedBody []portainer.ContainersResponse, substring str
 		if status == "all" || row.State == status {
 			for _, name := range row.Names {
 				if strings.Contains(name, substring) {
-					rowInfo = fmt.Sprintf("Names: %s, Id: %s, State: %s, NodeName: %s", name, row.Id, row.State, row.Portainer.Agent.NodeName)
+					rowInfo = fmt.Sprintf("Names: %s, Id: %s, State: %s, Status: %s, NodeName: %s", name, row.Id, row.State, row.Status, row.Portainer.Agent.NodeName)
 					fmt.Println(rowInfo)
 				}
 			}
