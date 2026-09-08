@@ -25,7 +25,7 @@ func NewCmdArgs() *CmdArgs {
 	var status = flag.String("status", "all", `Get containers by status: "running", "exited", "created" and special "all"`)
 
 	var isLogs = flag.Bool("logs", false, "Download logs from container")
-	var containerIdLogs = flag.String("container", "", "Container id/name for logs")
+	var containerIdLogs = flag.String("id", "", "Container id/name for logs")
 	var nodeLogs = flag.String("node", "", "Container node name for logs")
 	var tailLogs = flag.Int("tail", 10, "Print the last n record of logs; default tail=10")
 	var findLogs = find
