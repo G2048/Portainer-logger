@@ -72,6 +72,9 @@ func main() {
 
 	client := portainer.NewPortainerApi(settings.ApiKey)
 	decodedBody := getContainers(client)
+
+	ContainerId = cmdArgs.ContainersLogs.ContainerId
+	Node = cmdArgs.ContainersLogs.Node
 	switch {
 	case cmdArgs.ContainersLogs.Is:
 		if cmdArgs.ContainersLogs.Find != "" {
